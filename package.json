@@ -18,6 +18,7 @@
     "redux-saga": "^0.15.3"
   },
   "devDependencies": {
+    "babel-eslint": "^7.2.3",
     "babel-jest": "20.0.3",
     "babel-preset-react-native": "2.0.0",
     "eslint": "^3.19.0",

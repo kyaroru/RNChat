@@ -1,28 +1,14 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 class RightItem extends Component {
-  constructor() {
-    super();
-    this.onPress = this.onPress.bind(this);
-  }
-
-  onPress() {
-    const { action, screenName, onPress, navigation } = this.props;
-    if (action === 'navigate') {
-      navigation.navigate(screenName);
-    } else {
-      onPress();
-    }
-  }
-
   render() {
-    const { iconName } = this.props;
+    const { iconName, onPress } = this.props;
     return (
       <TouchableOpacity
         style={{ paddingRight: 20 }}
-        onPress={() => this.onPress()}
+        onPress={() => onPress()}
       >
         <Icon name={iconName} size={20} color="#fff" />
       </TouchableOpacity>
@@ -30,5 +16,10 @@ class RightItem extends Component {
     );
   }
 }
+
+RightItem.propTypes = {
+  iconName: PropTypes.string.isRequired,
+  onPress: PropTypes.func.isRequired,
+};
 
 export default RightItem;

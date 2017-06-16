@@ -1,14 +1,12 @@
-/*
-user: {
-  nickname,
-  email,
-}
-*/
-export const add = (firebase, user) => new Promise((resolve, reject) => {
-  // To create a new user object with auto-generated key
+import { getFirebaseApp } from '../utils/firebase';
+
+// User: { name, email }
+export const add = user => new Promise((resolve) => {
+  // To create a new User object with auto-generated key
+  const firebase = getFirebaseApp();
   const userID = firebase.database().ref().child('users').push().key;
   const userData = {
-    nickname: user.nickname,
+    name: user.name,
     email: user.email,
   };
   const updates = {
@@ -19,7 +17,8 @@ export const add = (firebase, user) => new Promise((resolve, reject) => {
   });
 });
 
-export const update = (firebase, userID, userData) => new Promise((resolve, reject) => {
+export const update = (userID, userData) => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
   const updates = {
     [`/users/${userID}`]: userData,
   };
@@ -28,14 +27,16 @@ export const update = (firebase, userID, userData) => new Promise((resolve, reje
   });
 });
 
-export const remove = (firebase, userID) => new Promise((resolve, reject) => {
+export const remove = userID => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
   const userRef = firebase.database().ref(`/users/${userID}`);
   userRef.remove().then(() => {
     resolve();
   });
 });
 
-export const getAll = (firebase) => new Promise((resolve, reject) => {
+export const getAll = () => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
   const usersRef = firebase.database().ref('/users');
   const users = [];
   usersRef.once('value', (snapshot) => {
@@ -44,8 +45,8 @@ export const getAll = (firebase) => new Promise((resolve, reject) => {
       const user = {
         id: childSnapshot.key,
         email: childData.email,
-        nickname: childData.nickname,
-      }
+        name: childData.name,
+      };
       users.push(user);
     });
     resolve(users);

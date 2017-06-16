@@ -1,61 +1,83 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {
   StyleSheet,
   Text,
-  View
+  View,
+  FlatList,
+  TouchableOpacity,
 } from 'react-native';
-import { initializeFirebaseApp } from '../../utils/firebase';
 import { getNavigationOptions } from '../../themes/appTheme';
 import { User } from '../../database';
 
 class UserScreen extends Component {
+
   constructor() {
     super();
+    this.renderItem = this.renderItem.bind(this);
+    this.onRefresh = this.onRefresh.bind(this);
     this.state = {
       users: null,
+      refreshing: false,
     };
   }
 
   componentDidMount() {
-    this.firebase = initializeFirebaseApp();
     this.getAllUsers();
   }
 
+  onRefresh() {
+    this.setState({ refreshing: true });
+    User.getAll().then((users) => {
+      this.setState({ users, refreshing: false });
+    });
+  }
+
   getAllUsers() {
-    User.getAll(this.firebase).then((users) => {
+    User.getAll().then((users) => {
       this.setState({ users });
     });
   }
 
-  addUser(user) {
-    User.add(this.firebase, user).then(() => {
-      console.log('User is added!');
-      this.getAllUsers();
-    });
-  }
+  keyExtractor = item => item.id;
+  itemSeparator = ({ highlighted }) => (
+    <View style={[styles.separator, highlighted && { marginLeft: 0 }]} />
+  )
 
   deleteUser(id) {
-    User.remove(this.firebase, id).then(() => {
+    User.remove(id).then(() => {
       console.log('User is removed!');
       this.getAllUsers();
     });
   }
 
+  renderItem({ item }) {
+    return (
+      <TouchableOpacity style={styles.itemContainer} onPress={() => this.deleteUser(item.id)}>
+        <View style={styles.item}>
+          <View style={styles.avatar}>
+            <Text>{item.name[0]}</Text>
+          </View>
+          <View style={styles.info}>
+            <View style={styles.infoContent}><Text style={{ fontSize: 18 }}>{item.name}</Text></View>
+            <View style={styles.infoContent}><Text>{item.email}</Text></View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
   render() {
-    const user = {
-      nickname: 'buibui',
-      email: 'ibuibui@outlook.com',
-    };
     return (
       <View style={styles.container}>
-        {this.state.users && this.state.users.map((user) => (
-          <View key={user.id}>
-            <Text onPress={() => this.deleteUser(user.id)}>{user.nickname}</Text>
-          </View>
-        ))}
-        <Text style={styles.welcome} onPress={() => this.addUser(user)}>
-          Add user
-        </Text>
+        <FlatList
+          ItemSeparatorComponent={this.itemSeparator}
+          data={this.state.users}
+          keyExtractor={this.keyExtractor}
+          renderItem={this.renderItem}
+          onRefresh={this.onRefresh}
+          refreshing={this.state.refreshing}
+        />
       </View>
     );
   }
@@ -64,22 +86,38 @@ class UserScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+  separator: {
+    height: 1,
+    backgroundColor: '#eee',
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
+  itemContainer: {
+    flex: 1,
+    padding: 10,
+  },
+  item: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  avatar: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#eee',
+  },
+  info: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  infoContent: {
+    flex: 1,
+    justifyContent: 'center',
   },
 });
 
 UserScreen.navigationOptions = getNavigationOptions('Users', '#3498db', 'white');
 
-export default UserScreen;
+export default connect()(UserScreen);
