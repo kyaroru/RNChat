@@ -29,7 +29,7 @@ class HomeScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Button onPress={this.startChat()}>Start Chatting!</Button>
+        <Button title="Start Chatting!" onPress={() => this.startChat()} />
       </View>
     );
   }
