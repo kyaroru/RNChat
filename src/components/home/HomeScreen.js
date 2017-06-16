@@ -58,6 +58,7 @@ class HomeScreen extends Component {
           <TextInput
             style={[styles.input, { borderColor: isNameFocus ? 'green' : '#3498db' }]}
             placeholder="Enter your name"
+            underlineColorAndroid="transparent"
             onFocus={() => this.setState({ isNameFocus: true })}
             onBlur={() => this.setState({ isNameFocus: false })}
             onChangeText={name => this.setState({ name })}
@@ -66,6 +67,7 @@ class HomeScreen extends Component {
           <TextInput
             style={[styles.input, { borderColor: isEmailFocus ? 'green' : '#3498db' }]}
             placeholder="Enter your email"
+            underlineColorAndroid="transparent"
             onFocus={() => this.setState({ isEmailFocus: true })}
             onBlur={() => this.setState({ isEmailFocus: false })}
             onChangeText={email => this.setState({ email })}
