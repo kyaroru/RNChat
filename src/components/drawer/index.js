@@ -8,7 +8,20 @@ import UserScreen from '../user/UserScreen';
 import CustomerServiceScreen from '../customer-service/CustomerServiceScreen';
 import * as Colors from '../../themes/colors';
 
-const drawerItem = navigation => <NavBarItem iconName="bars" onPress={() => navigation.navigate('DrawerOpen')} />;
+const getDrawerItem = navigation => (
+  <NavBarItem
+    iconName="bars"
+    onPress={() => {
+      if (navigation.state.index === 0) {
+        // check if drawer is not open, then only open it
+        navigation.navigate('DrawerOpen');
+      } else {
+        // else close the drawer
+        navigation.navigate('DrawerClose');
+      }
+    }}
+  />
+);
 
 const getDrawerIcon = (iconName, tintColor) => <Icon name={iconName} size={20} color={tintColor} />;
 
@@ -26,6 +39,6 @@ const Drawer = DrawerNavigator({
   CustomerServiceScreen: { screen: CustomerServiceScreen, navigationOptions: csNavOptions },
 }, getDrawerConfig(300, 'left'));
 
-Drawer.navigationOptions = ({ navigation }) => getNavigationOptionsWithAction('RNChat', Colors.primary, 'white', drawerItem(navigation));
+Drawer.navigationOptions = ({ navigation }) => getNavigationOptionsWithAction('RNChat', Colors.primary, 'white', getDrawerItem(navigation));
 
 export default Drawer;

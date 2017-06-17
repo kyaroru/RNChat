@@ -21,7 +21,7 @@ export const getNavigationOptionsWithAction = (title, backgroundColor, color, he
   headerLeft,
 });
 
-export const getDrawerNavigationOptions = (title, backgroundColor, titleColor, drawerIcon, headerLeft, headerRight) => ({
+export const getDrawerNavigationOptions = (title, backgroundColor, titleColor, drawerIcon) => ({
   title,
   headerStyle: {
     backgroundColor,
@@ -32,12 +32,9 @@ export const getDrawerNavigationOptions = (title, backgroundColor, titleColor, d
   headerTintColor: titleColor,
   drawerLabel: title,
   drawerIcon,
-  headerLeft,
-  headerRight,
 });
 
 export const getDrawerConfig = (drawerWidth, drawerPosition) => ({
   drawerWidth,
   drawerPosition,
-  // contentComponent: props => <ScrollView><DrawerItems {...props} /></ScrollView>
 });
