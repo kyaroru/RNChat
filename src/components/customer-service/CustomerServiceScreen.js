@@ -9,36 +9,36 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { getNavigationOptions } from '../../themes/appTheme';
-import { User } from '../../database';
+import { CustomerService } from '../../database';
 import * as Colors from '../../themes/colors';
 
-class UserScreen extends Component {
+class CustomerServiceScreen extends Component {
 
   constructor() {
     super();
     this.renderItem = this.renderItem.bind(this);
     this.onRefresh = this.onRefresh.bind(this);
     this.state = {
-      users: null,
+      customerServices: null,
       refreshing: false,
       isLoading: true,
     };
   }
 
   componentDidMount() {
-    this.getAllUsers();
+    this.getAllCustomerServices();
   }
 
   onRefresh() {
     this.setState({ refreshing: true });
-    User.getAll().then((users) => {
-      this.setState({ users, refreshing: false });
+    CustomerService.getAll().then((customerServices) => {
+      this.setState({ customerServices, refreshing: false });
     });
   }
 
-  getAllUsers() {
-    User.getAll().then((users) => {
-      this.setState({ users });
+  getAllCustomerServices() {
+    CustomerService.getAll().then((customerServices) => {
+      this.setState({ customerServices });
       this.setState({ isLoading: false });
     });
   }
@@ -48,16 +48,16 @@ class UserScreen extends Component {
     <View style={[styles.separator, highlighted && { marginLeft: 0 }]} />
   )
 
-  deleteUser(id) {
-    User.remove(id).then(() => {
-      console.log('User is removed!');
-      this.getAllUsers();
+  deleteCustomerService(id) {
+    CustomerService.remove(id).then(() => {
+      console.log('Customer Service is removed!');
+      this.getAllCustomerServices();
     });
   }
 
   renderItem({ item }) {
     return (
-      <TouchableOpacity style={styles.itemContainer} onPress={() => this.deleteUser(item.id)}>
+      <TouchableOpacity style={styles.itemContainer} onPress={() => this.deleteCustomerService(item.id)}>
         <View style={styles.item}>
           <View style={styles.avatar}>
             <Text>{item.name[0]}</Text>
@@ -76,7 +76,7 @@ class UserScreen extends Component {
       <View style={styles.container}>
         <FlatList
           ItemSeparatorComponent={this.itemSeparator}
-          data={this.state.users}
+          data={this.state.customerServices}
           keyExtractor={this.keyExtractor}
           renderItem={this.renderItem}
           onRefresh={this.onRefresh}
@@ -130,6 +130,6 @@ const styles = StyleSheet.create({
   },
 });
 
-UserScreen.navigationOptions = getNavigationOptions('Users', Colors.primary, 'white');
+CustomerServiceScreen.navigationOptions = getNavigationOptions('Customer Service', Colors.primary, 'white');
 
-export default connect()(UserScreen);
+export default connect()(CustomerServiceScreen);

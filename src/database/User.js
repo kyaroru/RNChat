@@ -1,26 +1,23 @@
 import { getFirebaseApp } from '../utils/firebase';
 
+const MODEL_NAME = 'user';
+
 // User: { name, email }
 export const add = user => new Promise((resolve) => {
   // To create a new User object with auto-generated key
   const firebase = getFirebaseApp();
-  const userID = firebase.database().ref().child('users').push().key;
+  const userID = firebase.database().ref().child(MODEL_NAME).push().key;
   const userData = {
     name: user.name,
     email: user.email,
   };
-  const updates = {
-    [`/users/${userID}`]: userData,
-  };
-  firebase.database().ref().update(updates).then(() => {
-    resolve();
-  });
+  resolve(update(userID, userData));
 });
 
 export const update = (userID, userData) => new Promise((resolve) => {
   const firebase = getFirebaseApp();
   const updates = {
-    [`/users/${userID}`]: userData,
+    [`/${MODEL_NAME}/${userID}`]: userData,
   };
   firebase.database().ref().update(updates).then(() => {
     resolve();
@@ -29,7 +26,7 @@ export const update = (userID, userData) => new Promise((resolve) => {
 
 export const remove = userID => new Promise((resolve) => {
   const firebase = getFirebaseApp();
-  const userRef = firebase.database().ref(`/users/${userID}`);
+  const userRef = firebase.database().ref(`/${MODEL_NAME}/${userID}`);
   userRef.remove().then(() => {
     resolve();
   });
@@ -37,7 +34,7 @@ export const remove = userID => new Promise((resolve) => {
 
 export const getAll = () => new Promise((resolve) => {
   const firebase = getFirebaseApp();
-  const usersRef = firebase.database().ref('/users');
+  const usersRef = firebase.database().ref(`/${MODEL_NAME}`);
   const users = [];
   usersRef.once('value', (snapshot) => {
     snapshot.forEach((childSnapshot) => {
