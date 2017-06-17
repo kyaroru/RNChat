@@ -8,9 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { getNavigationOptions } from '../../themes/appTheme';
 import { User } from '../../database';
-import * as Colors from '../../themes/colors';
 
 class UserScreen extends Component {
 
@@ -129,7 +127,5 @@ const styles = StyleSheet.create({
     right: 0,
   },
 });
-
-UserScreen.navigationOptions = getNavigationOptions('Users', Colors.primary, 'white');
 
 export default connect()(UserScreen);

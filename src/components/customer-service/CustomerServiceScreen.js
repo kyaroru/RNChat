@@ -8,9 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { getNavigationOptions } from '../../themes/appTheme';
 import { CustomerService } from '../../database';
-import * as Colors from '../../themes/colors';
 
 class CustomerServiceScreen extends Component {
 
@@ -129,7 +127,5 @@ const styles = StyleSheet.create({
     right: 0,
   },
 });
-
-CustomerServiceScreen.navigationOptions = getNavigationOptions('Customer Service', Colors.primary, 'white');
 
 export default connect()(CustomerServiceScreen);

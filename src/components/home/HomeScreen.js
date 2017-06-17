@@ -9,31 +9,12 @@ import {
 } from 'react-native';
 import { connect } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getNavigationOptions } from '../../themes/appTheme';
-import NavBarItem from '../common/NavBarItem';
 import { User, CustomerService } from '../../database';
 import { alert } from '../../utils/alert';
 import * as ducks from './ducks';
 import * as Colors from '../../themes/colors';
 
-const navOptions = getNavigationOptions('RNChat', Colors.primary, 'white');
-
-const leftItem = navigation => (
-  <NavBarItem iconName="users" onPress={() => navigation.navigate('UserScreen')} />
-);
-
-const rightItem = navigation => (
-  <NavBarItem iconName="user-md" onPress={() => navigation.navigate('CustomerServiceScreen')} />
-);
-
 class HomeScreen extends Component {
-
-  static navigationOptions = ({ navigation }) => ({
-    ...navOptions,
-    headerLeft: leftItem(navigation),
-    headerRight: rightItem(navigation),
-  });
-
   constructor() {
     super();
     this.state = {
@@ -200,7 +181,7 @@ const styles = StyleSheet.create({
 });
 
 HomeScreen.propTypes = {
-  updateCurrentUser: PropTypes.func,
+  updateCurrentUser: PropTypes.func.isRequired,
 };
 
 const mapDispatchToProps = {
