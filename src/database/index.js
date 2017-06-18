@@ -1,15 +1,15 @@
-import * as userOperation from './User';
-import * as csOperation from './CustomerService';
-import * as conversationOperation from './Conversation';
+import * as user from './user';
+import * as customerService from './customerService';
+import * as conversation from './conversation';
 
 export const User = {
-  ...userOperation,
+  ...user,
 };
 
 export const CustomerService = {
-  ...csOperation,
+  ...customerService,
 };
 
 export const Conversation = {
-  ...conversationOperation,
+  ...conversation,
 };
