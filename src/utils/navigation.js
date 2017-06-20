@@ -10,7 +10,7 @@ export const getNavigationOptions = (title, backgroundColor, color) => ({
 });
 
 export const getNavigationOptionsWithAction = (title, backgroundColor, color, headerLeft) => ({
-  title,
+  // title,
   headerStyle: {
     backgroundColor,
   },

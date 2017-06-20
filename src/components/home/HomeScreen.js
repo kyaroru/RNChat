@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import {
   StyleSheet,
   View,
@@ -8,8 +9,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { connect } from 'react-redux';
+import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { User, CustomerService } from '../../database';
+import { User, CustomerService, Conversation } from '../../database';
 import { alert } from '../../utils/alert';
 import * as ducks from './ducks';
 import * as Colors from '../../themes/colors';
@@ -41,7 +44,9 @@ class HomeScreen extends Component {
   clearInput = () => {
     this.nameInput.setNativeProps({ text: '' });
     this.emailInput.setNativeProps({ text: '' });
-    this.passwordInput.setNativeProps({ text: '' });
+    if (this.state.selectedTab !== 'user') {
+      this.passwordInput.setNativeProps({ text: '' });
+    }
   }
 
   upsertUser(user) {
@@ -105,6 +110,34 @@ class HomeScreen extends Component {
         active: 'false',
       };
       this.upsertCustomerService(customerService);
+    }
+  }
+
+  logout() {
+    const { updateCurrentUser } = this.props;
+    updateCurrentUser({});
+  }
+
+  startChat() {
+    const { navigation, currentUser } = this.props;
+    if (this.state.selectedTab === 'user') {
+      CustomerService.getMoreBy('active', 'true').then((activeCSs) => {
+        if (activeCSs.length > 0) {
+          const randomCS = _.sample(activeCSs);
+          console.log(`Random Active Customer Service is ${randomCS.name}`);
+          const conversation = {
+            userId: currentUser.id,
+            userName: currentUser.name,
+            csId: randomCS.id,
+            csName: randomCS.name,
+            userId_csId: `${currentUser.id}_${randomCS.id}`,
+            startTime: new Date().getTime(),
+          };
+          Conversation.add(conversation).then((conversationFromDB) => {
+            navigation.navigate('ConversationScreen', { conversation: conversationFromDB });
+          });
+        }
+      });
     }
   }
 
@@ -175,14 +208,47 @@ class HomeScreen extends Component {
     );
   }
 
+  renderUserInfo() {
+    const { currentUser } = this.props;
+    return (
+      <View style={styles.innerContainer}>
+        <View style={{ justifyContent: 'center', alignItems: 'center', margin: 10 }}>
+          <Icon name={this.state.selectedTab === 'user' ? 'user-circle' : 'user-md'} size={100} color={Colors.primary} />
+          <Text style={{ fontSize: 20, padding: 5 }}>{currentUser.name}</Text>
+          <Text style={{ fontSize: 16 }}>{currentUser.email}</Text>
+        </View>
+        <View style={[styles.input, { borderColor: Colors.primary }]}>
+          <TouchableOpacity style={styles.btnSubmit} onPress={() => this.startChat()}>
+            <Text style={{ textAlign: 'center', color: Colors.primary, marginRight: 10 }}>Start Chat!</Text>
+            {this.state.isLoading && <ActivityIndicator animating={this.state.isLoading} />}
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.input, { borderColor: Colors.primary, marginTop: 10 }]}>
+          <TouchableOpacity style={styles.btnSubmit} onPress={() => this.logout()}>
+            <Text style={{ textAlign: 'center', color: Colors.primary, marginRight: 10 }}>Logout</Text>
+            {this.state.isLoading && <ActivityIndicator animating={this.state.isLoading} />}
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  renderLogin() {
+    return (
+      <View style={styles.innerContainer}>
+        {HomeScreen.renderInstruction()}
+        {this.renderUserTab()}
+        {this.renderInput()}
+      </View>
+    );
+  }
+
   render() {
+    const { currentUser } = this.props;
     return (
       <View style={styles.container}>
-        <View style={styles.innerContainer}>
-          {HomeScreen.renderInstruction()}
-          {this.renderUserTab()}
-          {this.renderInput()}
-        </View>
+        {!isEmpty(currentUser) && this.renderUserInfo()}
+        {isEmpty(currentUser) && this.props.currentUser && this.renderLogin()}
       </View>
     );
   }
@@ -235,10 +301,16 @@ const styles = StyleSheet.create({
 
 HomeScreen.propTypes = {
   updateCurrentUser: PropTypes.func.isRequired,
+  currentUser: PropTypes.object.isRequired,
+  navigation: PropTypes.object.isRequired,
 };
+
+const mapStateToProps = store => ({
+  currentUser: store[ducks.NAME].currentUser,
+});
 
 const mapDispatchToProps = {
   updateCurrentUser: ducks.updateCurrentUser,
 };
 
-export default connect(null, mapDispatchToProps)(HomeScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);

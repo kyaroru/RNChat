@@ -1,5 +1,7 @@
 import { getFirebaseApp } from '../utils/firebase';
 
+let itemListenerRef;
+
 export const addItem = (modelName, itemData) => new Promise((resolve) => {
   // To create a new object with auto-generated key
   const firebase = getFirebaseApp();
@@ -10,7 +12,22 @@ export const addItem = (modelName, itemData) => new Promise((resolve) => {
       ...itemData,
     };
     resolve(newItem);
-  })
+  });
+});
+
+export const addItemWithParentId = (modelName, parentId, itemData) => new Promise((resolve) => {
+  // To create a new object with pre-defined key
+  const firebase = getFirebaseApp();
+  const itemRef = firebase.database().ref().child(modelName);
+  const newItemRef = itemRef.child(parentId).push();
+  const itemID = newItemRef.key;
+  newItemRef.set(itemData).then(() => {
+    const newItem = {
+      id: itemID,
+      ...itemData,
+    };
+    resolve(newItem);
+  });
 });
 
 export const updateItem = (modelName, itemID, itemData) => new Promise((resolve) => {
@@ -31,7 +48,7 @@ export const removeItem = (modelName, itemID) => new Promise((resolve) => {
   });
 });
 
-export const getAllItems = (modelName) => new Promise((resolve) => {
+export const getAllItems = modelName => new Promise((resolve) => {
   const firebase = getFirebaseApp();
   const itemsRef = firebase.database().ref(`/${modelName}`);
   const items = [];
@@ -51,7 +68,7 @@ export const getAllItems = (modelName) => new Promise((resolve) => {
 export const getItemBy = (modelName, fieldName, value) => new Promise((resolve) => {
   const firebase = getFirebaseApp();
   const ref = firebase.database().ref();
-  const itemRef = ref.child(modelName).orderByChild(fieldName).equalTo(value.toLowerCase());
+  const itemRef = ref.child(modelName).orderByChild(fieldName).equalTo(value);
   itemRef.on('value', (snapshot) => {
     const itemData = snapshot.val();
     if (itemData !== null) {
@@ -66,3 +83,57 @@ export const getItemBy = (modelName, fieldName, value) => new Promise((resolve) 
     }
   });
 });
+
+export const getItemsBy = (modelName, fieldName, value) => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
+  const ref = firebase.database().ref();
+  const itemsRef = ref.child(modelName).orderByChild(fieldName).equalTo(value);
+  itemsRef.on('value', (snapshot) => {
+    const itemData = snapshot.val();
+    if (itemData !== null) {
+      const items = [];
+      Object.keys(itemData).forEach((key) => {
+        const item = {
+          id: key,
+          ...itemData[key],
+        };
+        items.push(item);
+      });
+      resolve(items);
+    } else {
+      resolve([]);
+    }
+  });
+});
+
+export const getItemsByParentId = (modelName, parentId) => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
+  const itemsRef = firebase.database().ref(modelName).child(parentId);
+  itemsRef.on('value', (snapshot) => {
+    const itemData = snapshot.val();
+    if (itemData !== null) {
+      const items = [];
+      Object.keys(itemData).forEach((key) => {
+        const item = {
+          id: key,
+          ...itemData[key],
+        };
+        items.push(item);
+      });
+      resolve(items);
+    } else {
+      resolve([]);
+    }
+  });
+});
+
+export const onChildAdded = (modelName, value, cb) => {
+  const firebase = getFirebaseApp();
+  itemListenerRef = firebase.database().ref(modelName).child(value);
+  itemListenerRef.on('child_added', cb);
+};
+
+export const offChildAdded = () => {
+  itemListenerRef.off();
+  console.log('off listener');
+};

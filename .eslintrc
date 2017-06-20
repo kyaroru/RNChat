@@ -26,6 +26,7 @@
     'react/prefer-stateless-function': 'off',
     'no-use-before-define': 'off',
     'no-param-reassign': 'off',
-    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }]
+    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
+    'react/forbid-prop-types': 'off',
   }
 }
