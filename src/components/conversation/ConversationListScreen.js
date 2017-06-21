@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import {
   StyleSheet,
@@ -8,9 +9,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { getNavigationOptions } from '../../utils/navigation';
-import { Conversation } from '../../database';
 import isEmpty from 'lodash/isEmpty';
+import { Conversation } from '../../database';
 import * as homeDucks from '../home/ducks';
 
 class ConversationListScreen extends Component {
@@ -80,7 +80,7 @@ class ConversationListScreen extends Component {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={{ fontSize: 20 }}>Please login to continue :p</Text>
       </View>
-    )
+    );
   }
 
   renderConversations() {
@@ -149,6 +149,11 @@ const styles = StyleSheet.create({
     right: 0,
   },
 });
+
+ConversationListScreen.propTypes = {
+  navigation: PropTypes.object.isRequired,
+  currentUser: PropTypes.object.isRequired,
+};
 
 const mapStateToProps = store => ({
   currentUser: store[homeDucks.NAME].currentUser,

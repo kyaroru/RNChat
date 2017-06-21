@@ -30,17 +30,22 @@ class ConversationScreen extends Component {
   constructor() {
     super();
     this.onNewMessage = this.onNewMessage.bind(this);
+    this.getAllExistingMessages = this.getAllExistingMessages.bind(this);
+    this.onLayout = this.onLayout.bind(this);
+    this.onFooterLayout = this.onFooterLayout.bind(this);
+    this.renderFooter = this.renderFooter.bind(this);
     this.state = {
-      isLoading: true,
+      isLoading: false,
       message: null,
       messages: [],
+      listHeight: 0,
+      footerY: 0,
     };
   }
 
   componentDidMount() {
     const { navigation: { state } } = this.props;
     const conversation = state.params.conversation;
-    this.getAllExistingMessages();
     Message.onNew('conversationId', conversation.id, this.onNewMessage);
   }
 
@@ -60,6 +65,20 @@ class ConversationScreen extends Component {
     const newMessages = this.state.messages;
     newMessages.push(message);
     this.setState({ messages: newMessages });
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 500);
+  }
+
+  onLayout(event) {
+    const layout = event.nativeEvent.layout;
+    this.setState({ listHeight: layout.height });
+  }
+
+  // When the fake footer is laid out, store the y-position
+  onFooterLayout(event) {
+    const layout = event.nativeEvent.layout;
+    this.setState({ footerY: layout.y });
   }
 
   getAllExistingMessages() {
@@ -94,6 +113,28 @@ class ConversationScreen extends Component {
     this.clearInput();
   }
 
+  scrollToBottom(animated = true) {
+    if (this.state.listHeight && this.state.footerY && this.state.footerY > this.state.listHeight) {
+      // Calculates the y scroll position inside the ListView
+      const scrollTo = this.state.footerY - this.state.listHeight;
+
+      // Scroll that sucker!
+      this.listView.scrollTo({
+        y: scrollTo,
+        animated,
+      });
+    }
+  }
+
+  // Render a fake footer
+  renderFooter() {
+    return (
+      <View onLayout={this.onFooterLayout} style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Text />
+      </View>
+    );
+  }
+
   renderItem(item) {
     return (
       <View style={styles.itemContainer}>
@@ -114,9 +155,14 @@ class ConversationScreen extends Component {
     return (
       <View style={styles.container}>
         <ListView
+          ref={(component) => {
+            this.listView = component;
+          }}
           dataSource={ConversationScreen.getDataSource().cloneWithRows(this.genRows())}
           renderRow={this.renderItem}
           enableEmptySections
+          renderFooter={this.renderFooter}
+          onLayout={this.onLayout}
         />
         <View style={{ flexDirection: 'row' }}>
           <TextInput
