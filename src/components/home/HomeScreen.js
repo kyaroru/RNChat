@@ -7,10 +7,12 @@ import {
   Text,
   TextInput,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import isEmpty from 'lodash/isEmpty';
+import KeyboardSpacer from 'react-native-keyboard-spacer';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { User, CustomerService, Conversation } from '../../database';
 import { alert } from '../../utils/alert';
@@ -204,6 +206,7 @@ class HomeScreen extends Component {
             {this.state.isLoading && <ActivityIndicator animating={this.state.isLoading} />}
           </TouchableOpacity>
         </View>
+        {Platform.OS === 'ios' && <KeyboardSpacer />}
       </View>
     );
   }

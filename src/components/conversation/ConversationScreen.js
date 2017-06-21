@@ -35,7 +35,7 @@ class ConversationScreen extends Component {
     this.onFooterLayout = this.onFooterLayout.bind(this);
     this.renderFooter = this.renderFooter.bind(this);
     this.state = {
-      isLoading: false,
+      isLoading: true,
       message: null,
       messages: [],
       listHeight: 0,
@@ -179,7 +179,7 @@ class ConversationScreen extends Component {
           </TouchableOpacity>
         </View>
         {Platform.OS === 'ios' && <KeyboardSpacer />}
-        {this.state.isLoading && <ActivityIndicator size="large" style={styles.loading} animating={this.state.isLoading} />}
+        {this.state.messages.length <= 0 && <ActivityIndicator size="large" style={styles.loading} animating={this.state.isLoading} />}
       </View>
     );
   }
