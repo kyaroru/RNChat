@@ -1,8 +1,8 @@
 import { combineReducers } from 'redux';
-import home from './components/home';
+import auth from './components/auth';
 
 const createReducers = (reducers = {}) => combineReducers({
-  [home.ducks.NAME]: home.reducer,
+  [auth.ducks.NAME]: auth.reducer,
   ...reducers,
 });
 

@@ -1,4 +1,4 @@
-import { addItemWithParentId, updateItem, removeItem, getAllItems, getItemBy, getItemsByParentId, onChildAdded, offChildAdded } from './base';
+import { addItemWithParentId, updateItem, removeItem, getAllItems, getItemBy, getLastByParentId, getItemsByParentId, onChildAdded, offChildAdded } from './base';
 
 const MODEL_NAME = 'message';
 
@@ -20,6 +20,10 @@ export const getAll = () => new Promise((resolve) => {
 
 export const getBy = (fieldName, value) => new Promise((resolve) => {
   resolve(getItemBy(MODEL_NAME, fieldName, value));
+});
+
+export const getLastBy = parentId => new Promise((resolve) => {
+  resolve(getLastByParentId(MODEL_NAME, parentId));
 });
 
 export const getMoreBy = parentId => new Promise((resolve) => {

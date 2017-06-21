@@ -16,15 +16,24 @@ import { Message } from '../../database';
 import { getNavigationOptions } from '../../utils/navigation';
 import { getFormattedTime } from '../../utils/dateFormat';
 import * as Colors from '../../themes/colors';
-import * as homeDucks from '../home/ducks';
+import * as authDucks from '../auth/ducks';
 
 class ConversationScreen extends Component {
-  static navigationOptions = ({ navigation }) => getNavigationOptions(navigation.state.params.conversation.csName, Colors.primary, 'white');
+  static navigationOptions = () => getNavigationOptions('Conversation', Colors.primary, 'white');
   static getDataSource() {
     return new ListView.DataSource({
       rowHasChanged: (r1, r2) => r1 !== r2,
       sectionHeaderHasChanged: (r1, r2) => r1 !== r2,
     });
+  }
+
+  static splitName(name) {
+    let result = '';
+    const splitArray = name.split(' ');
+    splitArray.forEach((str) => {
+      result += str[0];
+    });
+    return result;
   }
 
   constructor() {
@@ -46,6 +55,11 @@ class ConversationScreen extends Component {
   componentDidMount() {
     const { navigation: { state } } = this.props;
     const conversation = state.params.conversation;
+    Message.getMoreBy(conversation.id).then((result) => {
+      if (result.length === 0) {
+        this.setState({ isLoading: false });
+      }
+    });
     Message.onNew('conversationId', conversation.id, this.onNewMessage);
   }
 
@@ -98,17 +112,35 @@ class ConversationScreen extends Component {
     this.messageInput.setNativeProps({ text: '' });
   }
 
+  isUser() {
+    const { currentUser } = this.props;
+    return typeof currentUser.password === 'undefined';
+  }
+
   sendMessage() {
     const { navigation: { state } } = this.props;
     const conversation = state.params.conversation;
-    const message = {
-      conversationId: conversation.id,
-      userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
-      from: conversation.userId,
-      fromName: conversation.userName,
-      createdAt: new Date().getTime(),
-      message: this.state.message,
-    };
+    let message;
+    if (this.isUser()) {
+      message = {
+        conversationId: conversation.id,
+        userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
+        from: conversation.userId,
+        fromName: conversation.userName,
+        createdAt: new Date().getTime(),
+        message: this.state.message,
+      };
+    } else {
+      message = {
+        conversationId: conversation.id,
+        userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
+        from: conversation.csId,
+        fromName: conversation.csName,
+        createdAt: new Date().getTime(),
+        message: this.state.message,
+      };
+    }
+
     Message.add(conversation.id, message);
     this.clearInput();
   }
@@ -140,7 +172,7 @@ class ConversationScreen extends Component {
       <View style={styles.itemContainer}>
         <View style={styles.item}>
           <View style={styles.avatar}>
-            <Text>{item.fromName}</Text>
+            <Text>{ConversationScreen.splitName(item.fromName)}</Text>
           </View>
           <View style={styles.info}>
             <View style={styles.infoContent}><Text>{item.fromName} ({getFormattedTime(item.createdAt)})</Text></View>
@@ -179,7 +211,7 @@ class ConversationScreen extends Component {
           </TouchableOpacity>
         </View>
         {Platform.OS === 'ios' && <KeyboardSpacer />}
-        {this.state.messages.length <= 0 && <ActivityIndicator size="large" style={styles.loading} animating={this.state.isLoading} />}
+        {this.state.messages.length <= 0 && this.state.isLoading && <ActivityIndicator size="large" style={styles.loading} animating={this.state.isLoading} />}
       </View>
     );
   }
@@ -249,10 +281,11 @@ const styles = StyleSheet.create({
 
 ConversationScreen.propTypes = {
   navigation: PropTypes.object.isRequired,
+  currentUser: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = store => ({
-  currentUser: store[homeDucks.NAME].currentUser,
+  currentUser: store[authDucks.NAME].currentUser,
 });
 
 export default connect(mapStateToProps)(ConversationScreen);

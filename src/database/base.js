@@ -127,6 +127,27 @@ export const getItemsByParentId = (modelName, parentId) => new Promise((resolve)
   });
 });
 
+export const getLastByParentId = (modelName, parentId) => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
+  const itemsRef = firebase.database().ref(modelName).child(parentId).limitToLast(1);
+  itemsRef.once('value', (snapshot) => {
+    const itemData = snapshot.val();
+    if (itemData !== null) {
+      const items = [];
+      Object.keys(itemData).forEach((key) => {
+        const item = {
+          id: key,
+          ...itemData[key],
+        };
+        items.push(item);
+      });
+      resolve(items[0]);
+    } else {
+      resolve({});
+    }
+  });
+});
+
 export const onChildAdded = (modelName, value, cb) => {
   const firebase = getFirebaseApp();
   itemListenerRef = firebase.database().ref(modelName).child(value);

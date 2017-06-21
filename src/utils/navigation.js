@@ -36,7 +36,8 @@ export const getDrawerNavigationOptions = (title, backgroundColor, titleColor, d
   drawerIcon,
 });
 
-export const getDrawerConfig = (drawerWidth, drawerPosition) => ({
+export const getDrawerConfig = (drawerWidth, drawerPosition, initialRouteName) => ({
   drawerWidth,
   drawerPosition,
+  initialRouteName,
 });

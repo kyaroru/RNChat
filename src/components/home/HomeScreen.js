@@ -5,114 +5,22 @@ import {
   View,
   TouchableOpacity,
   Text,
-  TextInput,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import isEmpty from 'lodash/isEmpty';
-import KeyboardSpacer from 'react-native-keyboard-spacer';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { User, CustomerService, Conversation } from '../../database';
-import { alert } from '../../utils/alert';
-import * as ducks from './ducks';
+import * as authDucks from '../auth/ducks';
 import * as Colors from '../../themes/colors';
 
 class HomeScreen extends Component {
-
-  static renderInstruction() {
-    return (
-      <Text style={styles.instructions}>
-        Welcome to RNChat. Please input your name & email to get started :p
-      </Text>
-    );
-  }
-
   constructor() {
     super();
     this.state = {
-      selectedTab: 'user',
-      email: null,
-      name: null,
-      password: null,
-      isNameFocus: false,
-      isEmailFocus: false,
-      isPasswordFocus: false,
       isLoading: false,
     };
-  }
-
-  clearInput = () => {
-    this.nameInput.setNativeProps({ text: '' });
-    this.emailInput.setNativeProps({ text: '' });
-    if (this.state.selectedTab !== 'user') {
-      this.passwordInput.setNativeProps({ text: '' });
-    }
-  }
-
-  upsertUser(user) {
-    const { updateCurrentUser } = this.props;
-    this.setState({ isLoading: true });
-    User.getBy('email', user.email).then((userFromDb) => {
-      if (userFromDb !== null) {
-        alert('Success', 'You have been logged in as User!', 'OK');
-        this.setState({ email: null, name: null, password: null, isLoading: false });
-        this.clearInput();
-        updateCurrentUser(userFromDb);
-      } else {
-        User.add(user).then((newUser) => {
-          alert('Success', 'You have been registered as User!', 'OK');
-          this.setState({ email: null, name: null, password: null, isLoading: false });
-          this.clearInput();
-          updateCurrentUser(newUser);
-        });
-      }
-    });
-  }
-
-  upsertCustomerService(customerService) {
-    const { updateCurrentUser } = this.props;
-    this.setState({ isLoading: true });
-
-    CustomerService.getBy('email', customerService.email).then((userFromDb) => {
-      if (userFromDb !== null) {
-        if (userFromDb.password === customerService.password) {
-          alert('Success', 'You have been logged in as Customer Service Officer!', 'OK');
-          this.setState({ email: null, name: null, isLoading: false });
-          this.clearInput();
-          updateCurrentUser(userFromDb);
-        } else {
-          alert('Error', 'Your password is incorrect!', 'OK');
-          this.setState({ isLoading: false });
-        }
-      } else {
-        CustomerService.add(customerService).then((newCS) => {
-          alert('Success', 'You have been registered as Customer Service Officer!', 'OK');
-          this.setState({ email: null, name: null, isLoading: false });
-          this.clearInput();
-          updateCurrentUser(newCS);
-        });
-      }
-    });
-  }
-
-  login() {
-    if (this.state.selectedTab === 'user') {
-      const user = {
-        name: this.state.name,
-        email: this.state.email.toLowerCase(),
-      };
-      this.upsertUser(user);
-    } else {
-      const customerService = {
-        name: this.state.name,
-        email: this.state.email.toLowerCase(),
-        password: this.state.password,
-        active: 'false',
-      };
-      this.upsertCustomerService(customerService);
-    }
   }
 
   logout() {
@@ -120,9 +28,27 @@ class HomeScreen extends Component {
     updateCurrentUser({});
   }
 
+  isUser() {
+    const { currentUser } = this.props;
+    return typeof currentUser.password === 'undefined';
+  }
+
+  upsertAndGoToConversation(conversation, userId, csId) {
+    const { navigation } = this.props;
+    Conversation.getBy('userId_csId', `${userId}_${csId}`).then((conversationFromDB) => {
+      if (conversationFromDB !== null) {
+        navigation.navigate('ConversationScreen', { conversation: conversationFromDB });
+      } else {
+        Conversation.add(conversation).then((conversationFromDB) => {
+          navigation.navigate('ConversationScreen', { conversation: conversationFromDB });
+        });
+      }
+    });
+  }
+
   startChat() {
-    const { navigation, currentUser } = this.props;
-    if (this.state.selectedTab === 'user') {
+    const { currentUser } = this.props;
+    if (this.isUser()) {
       CustomerService.getMoreBy('active', 'true').then((activeCSs) => {
         if (activeCSs.length > 0) {
           const randomCS = _.sample(activeCSs);
@@ -135,80 +61,26 @@ class HomeScreen extends Component {
             userId_csId: `${currentUser.id}_${randomCS.id}`,
             startTime: new Date().getTime(),
           };
-          Conversation.add(conversation).then((conversationFromDB) => {
-            navigation.navigate('ConversationScreen', { conversation: conversationFromDB });
-          });
+          this.upsertAndGoToConversation(conversation, currentUser.id, randomCS.id);
+        }
+      });
+    } else {
+      User.getAll().then((activeUsers) => {
+        if (activeUsers.length > 0) {
+          const randomUser = _.sample(activeUsers);
+          console.log(`Random User is ${randomUser.name}`);
+          const conversation = {
+            userId: randomUser.id,
+            userName: randomUser.name,
+            csId: currentUser.id,
+            csName: currentUser.name,
+            userId_csId: `${randomUser.id}_${currentUser.id}`,
+            startTime: new Date().getTime(),
+          };
+          this.upsertAndGoToConversation(conversation, randomUser.id, currentUser.id);
         }
       });
     }
-  }
-
-  renderUserTab() {
-    return (
-      <View style={styles.tabContainer}>
-        <TouchableOpacity onPress={() => this.setState({ selectedTab: 'user' })} style={styles.tab}>
-          <Icon name="user" size={50} color={this.state.selectedTab === 'user' ? Colors.primary : '#ddd'} />
-          <Text>User</Text>
-        </TouchableOpacity>
-        <View style={styles.tabSeparator} />
-        <TouchableOpacity onPress={() => this.setState({ selectedTab: 'customerService' })} style={styles.tab}>
-          <Icon name="user-md" size={50} color={this.state.selectedTab === 'customerService' ? Colors.primary : '#ddd'} />
-          <Text>Customer Service</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  renderInput() {
-    const { isNameFocus, isEmailFocus } = this.state;
-    return (
-      <View>
-        <TextInput
-          style={[styles.input, { borderColor: isNameFocus ? 'green' : Colors.primary }]}
-          ref={(component) => {
-            this.nameInput = component;
-          }}
-          placeholder="Enter your name"
-          underlineColorAndroid="transparent"
-          onFocus={() => this.setState({ isNameFocus: true })}
-          onBlur={() => this.setState({ isNameFocus: false })}
-          onChangeText={name => this.setState({ name })}
-        />
-        <View style={{ height: 10 }} />
-        <TextInput
-          style={[styles.input, { borderColor: isEmailFocus ? 'green' : Colors.primary }]}
-          ref={(component) => {
-            this.emailInput = component;
-          }}
-          placeholder="Enter your email"
-          underlineColorAndroid="transparent"
-          onFocus={() => this.setState({ isEmailFocus: true })}
-          onBlur={() => this.setState({ isEmailFocus: false })}
-          onChangeText={email => this.setState({ email })}
-        />
-        {this.state.selectedTab !== 'user' && <View style={{ height: 10 }} />}
-        {this.state.selectedTab !== 'user' && <TextInput
-          style={[styles.input, { borderColor: isEmailFocus ? 'green' : Colors.primary }]}
-          ref={(component) => {
-            this.passwordInput = component;
-          }}
-          secureTextEntry
-          placeholder="Enter your password"
-          underlineColorAndroid="transparent"
-          onFocus={() => this.setState({ isPasswordFocus: true })}
-          onBlur={() => this.setState({ isPasswordFocus: false })}
-          onChangeText={password => this.setState({ password })}
-        />}
-        <View style={{ height: 10 }} />
-        <View style={[styles.input, { borderColor: Colors.primary }]}>
-          <TouchableOpacity style={styles.btnSubmit} onPress={() => this.login()}>
-            <Text style={{ textAlign: 'center', color: Colors.primary, marginRight: 10 }}>Login/Register</Text>
-            {this.state.isLoading && <ActivityIndicator animating={this.state.isLoading} />}
-          </TouchableOpacity>
-        </View>
-        {Platform.OS === 'ios' && <KeyboardSpacer />}
-      </View>
-    );
   }
 
   renderUserInfo() {
@@ -216,7 +88,7 @@ class HomeScreen extends Component {
     return (
       <View style={styles.innerContainer}>
         <View style={{ justifyContent: 'center', alignItems: 'center', margin: 10 }}>
-          <Icon name={this.state.selectedTab === 'user' ? 'user-circle' : 'user-md'} size={100} color={Colors.primary} />
+          <Icon name={this.isUser() ? 'user-circle' : 'user-md'} size={100} color={Colors.primary} />
           <Text style={{ fontSize: 20, padding: 5 }}>{currentUser.name}</Text>
           <Text style={{ fontSize: 16 }}>{currentUser.email}</Text>
         </View>
@@ -236,22 +108,11 @@ class HomeScreen extends Component {
     );
   }
 
-  renderLogin() {
-    return (
-      <View style={styles.innerContainer}>
-        {HomeScreen.renderInstruction()}
-        {this.renderUserTab()}
-        {this.renderInput()}
-      </View>
-    );
-  }
-
   render() {
     const { currentUser } = this.props;
     return (
       <View style={styles.container}>
         {!isEmpty(currentUser) && this.renderUserInfo()}
-        {isEmpty(currentUser) && this.props.currentUser && this.renderLogin()}
       </View>
     );
   }
@@ -309,11 +170,11 @@ HomeScreen.propTypes = {
 };
 
 const mapStateToProps = store => ({
-  currentUser: store[ducks.NAME].currentUser,
+  currentUser: store[authDucks.NAME].currentUser,
 });
 
 const mapDispatchToProps = {
-  updateCurrentUser: ducks.updateCurrentUser,
+  updateCurrentUser: authDucks.updateCurrentUser,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);

@@ -1,7 +1,7 @@
 // @flow
-export const NAME = 'HOME';
+export const NAME = 'AUTH';
 
-export const UPDATE_CURRENT_USER = 'UPDATE_CURRENT_USER';
+export const UPDATE_CURRENT_USER = `${NAME}/UPDATE_CURRENT_USER`;
 
 export const updateCurrentUser = user => ({
   type: UPDATE_CURRENT_USER,

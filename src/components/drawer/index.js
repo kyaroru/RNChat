@@ -41,7 +41,7 @@ const Drawer = DrawerNavigator({
   UserScreen: { screen: UserScreen, navigationOptions: userNavOptions },
   CustomerServiceScreen: { screen: CustomerServiceScreen, navigationOptions: csNavOptions },
   ConversationListScreen: { screen: ConversationListScreen, navigationOptions: conNavOptions },
-}, getDrawerConfig(300, 'left'));
+}, getDrawerConfig(300, 'left', 'HomeScreen'));
 
 Drawer.navigationOptions = ({ navigation }) => getNavigationOptionsWithAction('RNChat', Colors.primary, 'white', getDrawerItem(navigation));
 
