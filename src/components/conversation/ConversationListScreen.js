@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ListView,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import isEmpty from 'lodash/isEmpty';
@@ -56,9 +57,9 @@ class ConversationListScreen extends Component {
     this.setState({ refreshing: true });
     const fieldName = this.isUser() ? 'userId' : 'csId';
     Conversation.getMoreBy(fieldName, currentUser.id).then((conversations) => {
-      this.setState({ conversations, refreshing: false });
+      this.setState({ conversations });
       this.getLastMessage();
-      this.getChatUsers();
+      this.getChatUsers('refreshing');
     });
   }
 
@@ -68,33 +69,32 @@ class ConversationListScreen extends Component {
       const fieldName = this.isUser() ? 'userId' : 'csId';
       Conversation.getMoreBy(fieldName, currentUser.id).then((conversations) => {
         this.setState({ conversations });
-        // this.setState({ isLoading: false });
         this.getLastMessage();
-        this.getChatUsers();
+        this.getChatUsers('isLoading');
       });
     } else {
       this.setState({ isLoading: false });
     }
   }
 
-  getChatUsers() {
+  getChatUsers(loading) {
     const { conversations } = this.state;
     if (!isEmpty(conversations)) {
-      this.setState({ isLoading: true });
+      this.setState({ [loading]: true });
       conversations.forEach((item) => {
         if (this.isUser()) {
           CustomerService.get(item.csId).then((result) => {
             const users = this.state.users;
             users[item.id] = result;
             this.setState({ users });
-            this.setState({ isLoading: false });
+            this.setState({ [loading]: false });
           });
         } else {
           User.get(item.userId).then((result) => {
             const users = this.state.users;
             users[item.id] = result;
             this.setState({ users });
-            this.setState({ isLoading: false });
+            this.setState({ [loading]: false });
           });
         }
       });
@@ -160,6 +160,12 @@ class ConversationListScreen extends Component {
         ref={(component) => {
           this.listView = component;
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={this.state.refreshing}
+            onRefresh={this.onRefresh}
+          />
+        }
         dataSource={ConversationListScreen.getDataSource().cloneWithRows(conversations)}
         renderRow={this.renderItem}
         enableEmptySections
@@ -169,11 +175,11 @@ class ConversationListScreen extends Component {
 
   render() {
     const { currentUser } = this.props;
-    const { isLoading } = this.state;
+    const { isLoading, refreshing } = this.state;
     return (
       <View style={styles.container}>
         {!isEmpty(currentUser) && !isLoading && this.renderConversations()}
-        {isLoading && <ActivityIndicator size="large" style={styles.loading} animating={this.state.isLoading} />}
+        {isLoading && !refreshing && <ActivityIndicator size="large" style={styles.loading} animating={this.state.isLoading} />}
       </View>
     );
   }

@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { Message } from '../../database';
 import { getNavigationOptions } from '../../utils/navigation';
 import { getFormattedTime } from '../../utils/dateFormat';
@@ -19,7 +20,6 @@ import * as Colors from '../../themes/colors';
 import * as authDucks from '../auth/ducks';
 import { getStore } from '../../createStore';
 import * as ducks from './ducks';
-import Icon from 'react-native-vector-icons/FontAwesome';
 
 class ConversationScreen extends Component {
   static navigationOptions = () => {
@@ -114,46 +114,6 @@ class ConversationScreen extends Component {
     });
   }
 
-  genRows() {
-    const { messages } = this.state;
-    return messages;
-  }
-
-  clearInput() {
-    this.messageInput.setNativeProps({ text: '' });
-  }
-
-  isUser() {
-    const { currentUser } = this.props;
-    return typeof currentUser.password === 'undefined';
-  }
-
-  sendMessage() {
-    const { navigation: { state }, currentUser } = this.props;
-    const conversation = state.params.conversation;
-    // let message;
-    // if (this.isUser()) {
-    const message = {
-      conversationId: conversation.id,
-      userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
-      from: currentUser.id,
-      createdAt: new Date().getTime(),
-      message: this.state.message,
-    };
-    // } else {
-    //   message = {
-    //     conversationId: conversation.id,
-    //     userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
-    //     from: currentUser.id,
-    //     createdAt: new Date().getTime(),
-    //     message: this.state.message,
-    //   };
-    // }
-
-    Message.add(conversation.id, message);
-    this.clearInput();
-  }
-
   getAvatarName(item) {
     const { currentUser, targetUser } = this.props;
     if (item.from === targetUser.id) {
@@ -168,6 +128,30 @@ class ConversationScreen extends Component {
       return targetUser.name;
     }
     return currentUser.name;
+  }
+
+  clearInput() {
+    this.messageInput.setNativeProps({ text: '' });
+  }
+
+  isUser() {
+    const { currentUser } = this.props;
+    return typeof currentUser.password === 'undefined';
+  }
+
+  sendMessage() {
+    const { navigation: { state }, currentUser } = this.props;
+    const conversation = state.params.conversation;
+    const message = {
+      conversationId: conversation.id,
+      userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
+      from: currentUser.id,
+      createdAt: new Date().getTime(),
+      message: this.state.message,
+    };
+
+    Message.add(conversation.id, message);
+    this.clearInput();
   }
 
   scrollToBottom(animated = true) {
@@ -225,13 +209,13 @@ class ConversationScreen extends Component {
         ref={(component) => {
           this.listView = component;
         }}
-        dataSource={ConversationScreen.getDataSource().cloneWithRows(this.genRows())}
+        dataSource={ConversationScreen.getDataSource().cloneWithRows(messages)}
         renderRow={this.renderItem}
         enableEmptySections
         renderFooter={this.renderFooter}
         onLayout={this.onLayout}
       />
-    )
+    );
   }
 
   render() {
