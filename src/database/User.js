@@ -1,4 +1,4 @@
-import { addItem, updateItem, removeItem, getAllItems, getItemBy, getItemsBy } from './base';
+import { addItem, updateItem, removeItem, getItem, getAllItems, getItemBy, getItemsBy } from './base';
 
 const MODEL_NAME = 'user';
 
@@ -16,6 +16,10 @@ export const remove = id => new Promise((resolve) => {
 
 export const getAll = () => new Promise((resolve) => {
   resolve(getAllItems(MODEL_NAME));
+});
+
+export const get = id => new Promise((resolve) => {
+  resolve(getItem(MODEL_NAME, id));
 });
 
 export const getBy = (fieldName, value) => new Promise((resolve) => {

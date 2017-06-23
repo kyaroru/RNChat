@@ -13,6 +13,7 @@ import isEmpty from 'lodash/isEmpty';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { User, CustomerService, Conversation } from '../../database';
 import * as authDucks from '../auth/ducks';
+import * as conversationDucks from '../conversation/ducks';
 import * as Colors from '../../themes/colors';
 
 class HomeScreen extends Component {
@@ -52,12 +53,10 @@ class HomeScreen extends Component {
       CustomerService.getMoreBy('active', 'true').then((activeCSs) => {
         if (activeCSs.length > 0) {
           const randomCS = _.sample(activeCSs);
-          console.log(`Random Active Customer Service is ${randomCS.name}`);
+          this.props.updateTargetUser(randomCS);
           const conversation = {
             userId: currentUser.id,
-            userName: currentUser.name,
             csId: randomCS.id,
-            csName: randomCS.name,
             userId_csId: `${currentUser.id}_${randomCS.id}`,
             startTime: new Date().getTime(),
           };
@@ -68,12 +67,10 @@ class HomeScreen extends Component {
       User.getAll().then((activeUsers) => {
         if (activeUsers.length > 0) {
           const randomUser = _.sample(activeUsers);
-          console.log(`Random User is ${randomUser.name}`);
+          this.props.updateTargetUser(randomUser);
           const conversation = {
             userId: randomUser.id,
-            userName: randomUser.name,
             csId: currentUser.id,
-            csName: currentUser.name,
             userId_csId: `${randomUser.id}_${currentUser.id}`,
             startTime: new Date().getTime(),
           };
@@ -165,6 +162,7 @@ const styles = StyleSheet.create({
 
 HomeScreen.propTypes = {
   updateCurrentUser: PropTypes.func.isRequired,
+  updateTargetUser: PropTypes.func.isRequired,
   currentUser: PropTypes.object.isRequired,
   navigation: PropTypes.object.isRequired,
 };
@@ -175,6 +173,7 @@ const mapStateToProps = store => ({
 
 const mapDispatchToProps = {
   updateCurrentUser: authDucks.updateCurrentUser,
+  updateTargetUser: conversationDucks.updateTargetUser,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HomeScreen);

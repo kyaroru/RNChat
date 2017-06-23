@@ -65,11 +65,30 @@ export const getAllItems = modelName => new Promise((resolve) => {
   });
 });
 
+export const getItem = (modelName, id) => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
+  const ref = firebase.database().ref();
+  const itemRef = ref.child(`${modelName}/${id}`);
+  itemRef.once('value', (snapshot) => {
+    const itemData = snapshot.val();
+    if (itemData !== null) {
+      const itemID = snapshot.key;
+      const item = {
+        id: itemID,
+        ...itemData,
+      };
+      resolve(item);
+    } else {
+      resolve(null);
+    }
+  });
+});
+
 export const getItemBy = (modelName, fieldName, value) => new Promise((resolve) => {
   const firebase = getFirebaseApp();
   const ref = firebase.database().ref();
   const itemRef = ref.child(modelName).orderByChild(fieldName).equalTo(value);
-  itemRef.on('value', (snapshot) => {
+  itemRef.once('value', (snapshot) => {
     const itemData = snapshot.val();
     if (itemData !== null) {
       const itemID = Object.keys(itemData)[0];
@@ -88,7 +107,7 @@ export const getItemsBy = (modelName, fieldName, value) => new Promise((resolve)
   const firebase = getFirebaseApp();
   const ref = firebase.database().ref();
   const itemsRef = ref.child(modelName).orderByChild(fieldName).equalTo(value);
-  itemsRef.on('value', (snapshot) => {
+  itemsRef.once('value', (snapshot) => {
     const itemData = snapshot.val();
     if (itemData !== null) {
       const items = [];
@@ -109,7 +128,7 @@ export const getItemsBy = (modelName, fieldName, value) => new Promise((resolve)
 export const getItemsByParentId = (modelName, parentId) => new Promise((resolve) => {
   const firebase = getFirebaseApp();
   const itemsRef = firebase.database().ref(modelName).child(parentId);
-  itemsRef.on('value', (snapshot) => {
+  itemsRef.once('value', (snapshot) => {
     const itemData = snapshot.val();
     if (itemData !== null) {
       const items = [];

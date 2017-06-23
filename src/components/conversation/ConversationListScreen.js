@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import isEmpty from 'lodash/isEmpty';
-import { Conversation, Message } from '../../database';
+import { Conversation, Message, User, CustomerService } from '../../database';
 import * as Colors from '../../themes/colors';
 import * as authDucks from '../auth/ducks';
+import * as ducks from './ducks';
 
 class ConversationListScreen extends Component {
   static getDataSource() {
@@ -42,6 +43,7 @@ class ConversationListScreen extends Component {
       refreshing: false,
       isLoading: true,
       lastMessages: {},
+      users: {},
     };
   }
 
@@ -56,6 +58,7 @@ class ConversationListScreen extends Component {
     Conversation.getMoreBy(fieldName, currentUser.id).then((conversations) => {
       this.setState({ conversations, refreshing: false });
       this.getLastMessage();
+      this.getChatUsers();
     });
   }
 
@@ -65,26 +68,43 @@ class ConversationListScreen extends Component {
       const fieldName = this.isUser() ? 'userId' : 'csId';
       Conversation.getMoreBy(fieldName, currentUser.id).then((conversations) => {
         this.setState({ conversations });
-        this.setState({ isLoading: false });
+        // this.setState({ isLoading: false });
         this.getLastMessage();
+        this.getChatUsers();
       });
     } else {
       this.setState({ isLoading: false });
     }
   }
 
-  getAvatarName(item) {
-    return this.isUser() ? ConversationListScreen.splitName(item.csName) : ConversationListScreen.splitName(item.userName);
-  }
-
-  getDisplayName(item) {
-    return this.isUser() ? item.csName : item.userName;
+  getChatUsers() {
+    const { conversations } = this.state;
+    if (!isEmpty(conversations)) {
+      this.setState({ isLoading: true });
+      conversations.forEach((item) => {
+        if (this.isUser()) {
+          CustomerService.get(item.csId).then((result) => {
+            const users = this.state.users;
+            users[item.id] = result;
+            this.setState({ users });
+            this.setState({ isLoading: false });
+          });
+        } else {
+          User.get(item.userId).then((result) => {
+            const users = this.state.users;
+            users[item.id] = result;
+            this.setState({ users });
+            this.setState({ isLoading: false });
+          });
+        }
+      });
+    }
   }
 
   getLastMessage() {
     const { conversations } = this.state;
     if (!isEmpty(conversations)) {
-      this.state.conversations.forEach((item) => {
+      conversations.forEach((item) => {
         Message.getLastBy(item.id).then((result) => {
           const lastMessages = this.state.lastMessages;
           lastMessages[item.id] = result.message;
@@ -96,6 +116,8 @@ class ConversationListScreen extends Component {
 
   openConversation(conversation) {
     const { navigation } = this.props;
+    const { users } = this.state;
+    this.props.updateTargetUser(users[conversation.id]);
     navigation.navigate('ConversationScreen', { conversation });
   }
 
@@ -105,15 +127,16 @@ class ConversationListScreen extends Component {
   }
 
   renderItem(item) {
+    const { lastMessages, users } = this.state;
     return (
       <TouchableOpacity style={styles.itemContainer} onPress={() => this.openConversation(item)}>
         <View style={styles.item}>
           <View style={styles.avatar}>
-            <Text>{this.getAvatarName(item)}</Text>
+            <Text>{users[item.id] && ConversationListScreen.splitName(users[item.id].name)}</Text>
           </View>
           <View style={styles.info}>
-            <View style={styles.infoContent}><Text style={{ fontSize: 18 }}>{this.getDisplayName(item)}</Text></View>
-            <View style={styles.infoContent}><Text>{this.state.lastMessages[item.id]}</Text></View>
+            <View style={styles.infoContent}><Text style={{ fontSize: 18 }}>{users[item.id] && users[item.id].name}</Text></View>
+            <View style={styles.infoContent}><Text>{lastMessages[item.id] || 'Start conversation now :p'}</Text></View>
           </View>
         </View>
       </TouchableOpacity>
@@ -122,34 +145,35 @@ class ConversationListScreen extends Component {
 
   renderConversations() {
     const { conversations } = this.state;
-    if (conversations.length > 0) {
+    if (conversations.length <= 0) {
       return (
-        <ListView
-          ref={(component) => {
-            this.listView = component;
-          }}
-          dataSource={ConversationListScreen.getDataSource().cloneWithRows(conversations)}
-          renderRow={this.renderItem}
-          enableEmptySections
-        />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ padding: 10 }}>
+            <Icon name="comments-o" size={50} color={Colors.primary} />
+          </View>
+          <Text style={{ color: Colors.primary }}>You have not chat with anyone yet</Text>
+        </View>
       );
     }
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ padding: 10 }}>
-          <Icon name="comments-o" size={50} color={Colors.primary} />
-        </View>
-        <Text style={{ color: Colors.primary }}>You have not chat with anyone yet</Text>
-      </View>
+      <ListView
+        ref={(component) => {
+          this.listView = component;
+        }}
+        dataSource={ConversationListScreen.getDataSource().cloneWithRows(conversations)}
+        renderRow={this.renderItem}
+        enableEmptySections
+      />
     );
   }
 
   render() {
     const { currentUser } = this.props;
+    const { isLoading } = this.state;
     return (
       <View style={styles.container}>
-        {!isEmpty(currentUser) && this.renderConversations()}
-        {this.state.isLoading && <ActivityIndicator size="large" style={styles.loading} animating={this.state.isLoading} />}
+        {!isEmpty(currentUser) && !isLoading && this.renderConversations()}
+        {isLoading && <ActivityIndicator size="large" style={styles.loading} animating={this.state.isLoading} />}
       </View>
     );
   }
@@ -198,6 +222,7 @@ const styles = StyleSheet.create({
 });
 
 ConversationListScreen.propTypes = {
+  updateTargetUser: PropTypes.func.isRequired,
   navigation: PropTypes.object.isRequired,
   currentUser: PropTypes.object.isRequired,
 };
@@ -206,4 +231,8 @@ const mapStateToProps = store => ({
   currentUser: store[authDucks.NAME].currentUser,
 });
 
-export default connect(mapStateToProps)(ConversationListScreen);
+const mapDispatchToProps = {
+  updateTargetUser: ducks.updateTargetUser,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ConversationListScreen);

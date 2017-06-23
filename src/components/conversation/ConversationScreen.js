@@ -17,9 +17,17 @@ import { getNavigationOptions } from '../../utils/navigation';
 import { getFormattedTime } from '../../utils/dateFormat';
 import * as Colors from '../../themes/colors';
 import * as authDucks from '../auth/ducks';
+import { getStore } from '../../createStore';
+import * as ducks from './ducks';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 class ConversationScreen extends Component {
-  static navigationOptions = () => getNavigationOptions('Conversation', Colors.primary, 'white');
+  static navigationOptions = () => {
+    const store = getStore();
+    const state = store.getState();
+    const targetUser = ducks.getTargetUser(state);
+    return getNavigationOptions(`${targetUser.name}`, Colors.primary, 'white');
+  };
   static getDataSource() {
     return new ListView.DataSource({
       rowHasChanged: (r1, r2) => r1 !== r2,
@@ -43,6 +51,9 @@ class ConversationScreen extends Component {
     this.onLayout = this.onLayout.bind(this);
     this.onFooterLayout = this.onFooterLayout.bind(this);
     this.renderFooter = this.renderFooter.bind(this);
+    this.renderItem = this.renderItem.bind(this);
+    this.getAvatarName = this.getAvatarName.bind(this);
+    this.getSenderName = this.getSenderName.bind(this);
     this.state = {
       isLoading: true,
       message: null,
@@ -118,31 +129,45 @@ class ConversationScreen extends Component {
   }
 
   sendMessage() {
-    const { navigation: { state } } = this.props;
+    const { navigation: { state }, currentUser } = this.props;
     const conversation = state.params.conversation;
-    let message;
-    if (this.isUser()) {
-      message = {
-        conversationId: conversation.id,
-        userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
-        from: conversation.userId,
-        fromName: conversation.userName,
-        createdAt: new Date().getTime(),
-        message: this.state.message,
-      };
-    } else {
-      message = {
-        conversationId: conversation.id,
-        userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
-        from: conversation.csId,
-        fromName: conversation.csName,
-        createdAt: new Date().getTime(),
-        message: this.state.message,
-      };
-    }
+    // let message;
+    // if (this.isUser()) {
+    const message = {
+      conversationId: conversation.id,
+      userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
+      from: currentUser.id,
+      createdAt: new Date().getTime(),
+      message: this.state.message,
+    };
+    // } else {
+    //   message = {
+    //     conversationId: conversation.id,
+    //     userId_csId_converId: `${conversation.userId_csId}_${conversation.id}`,
+    //     from: currentUser.id,
+    //     createdAt: new Date().getTime(),
+    //     message: this.state.message,
+    //   };
+    // }
 
     Message.add(conversation.id, message);
     this.clearInput();
+  }
+
+  getAvatarName(item) {
+    const { currentUser, targetUser } = this.props;
+    if (item.from === targetUser.id) {
+      return ConversationScreen.splitName(targetUser.name);
+    }
+    return ConversationScreen.splitName(currentUser.name);
+  }
+
+  getSenderName(item) {
+    const { currentUser, targetUser } = this.props;
+    if (item.from === targetUser.id) {
+      return targetUser.name;
+    }
+    return currentUser.name;
   }
 
   scrollToBottom(animated = true) {
@@ -172,10 +197,10 @@ class ConversationScreen extends Component {
       <View style={styles.itemContainer}>
         <View style={styles.item}>
           <View style={styles.avatar}>
-            <Text>{ConversationScreen.splitName(item.fromName)}</Text>
+            <Text>{this.getAvatarName(item)}</Text>
           </View>
           <View style={styles.info}>
-            <View style={styles.infoContent}><Text>{item.fromName} ({getFormattedTime(item.createdAt)})</Text></View>
+            <View style={styles.infoContent}><Text>{this.getSenderName(item)} ({getFormattedTime(item.createdAt)})</Text></View>
             <View style={styles.infoContent}><Text style={{ fontSize: 18 }}>{item.message}</Text></View>
           </View>
         </View>
@@ -183,19 +208,38 @@ class ConversationScreen extends Component {
     );
   }
 
+  renderMessages() {
+    const { messages } = this.state;
+    if (messages.length <= 0) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ padding: 10 }}>
+            <Icon name={this.isUser() ? 'question-circle-o' : 'info-circle'} size={50} color={Colors.primary} />
+          </View>
+          <Text style={{ color: Colors.primary }}>{this.isUser() ? 'Hmmm.. start asking question :p' : 'Hmm.. start answering customer enquiry :p'}</Text>
+        </View>
+      );
+    }
+    return (
+      <ListView
+        ref={(component) => {
+          this.listView = component;
+        }}
+        dataSource={ConversationScreen.getDataSource().cloneWithRows(this.genRows())}
+        renderRow={this.renderItem}
+        enableEmptySections
+        renderFooter={this.renderFooter}
+        onLayout={this.onLayout}
+      />
+    )
+  }
+
   render() {
     return (
       <View style={styles.container}>
-        <ListView
-          ref={(component) => {
-            this.listView = component;
-          }}
-          dataSource={ConversationScreen.getDataSource().cloneWithRows(this.genRows())}
-          renderRow={this.renderItem}
-          enableEmptySections
-          renderFooter={this.renderFooter}
-          onLayout={this.onLayout}
-        />
+        <View style={{ flex: 1 }}>
+          {this.renderMessages()}
+        </View>
         <View style={{ flexDirection: 'row' }}>
           <TextInput
             style={[styles.input, { borderColor: Colors.primary }]}
@@ -282,10 +326,12 @@ const styles = StyleSheet.create({
 ConversationScreen.propTypes = {
   navigation: PropTypes.object.isRequired,
   currentUser: PropTypes.object.isRequired,
+  targetUser: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = store => ({
   currentUser: store[authDucks.NAME].currentUser,
+  targetUser: store[ducks.NAME].targetUser,
 });
 
 export default connect(mapStateToProps)(ConversationScreen);

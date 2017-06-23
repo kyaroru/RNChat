@@ -5,6 +5,7 @@ import { createLogger } from 'redux-logger';
 
 const sagaMiddleware = createSagaMiddleware();
 let middleware;
+let store;
 
 /* global __DEV__*/
 if (__DEV__) {
@@ -13,8 +14,10 @@ if (__DEV__) {
   middleware = applyMiddleware(sagaMiddleware);
 }
 
+export const getStore = () => store;
+
 export default (reducers, data = {}) => {
-  const store = createStore(reducers, data, middleware);
+  store = createStore(reducers, data, middleware);
   // sagaMiddleware.run(mySaga);
   return store;
 };

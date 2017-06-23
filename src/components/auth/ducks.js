@@ -8,4 +8,4 @@ export const updateCurrentUser = user => ({
   user,
 });
 
-export const getCurrentUser = state => state[NAME].currentUser;
+export const getCurrentUser = store => store[NAME].currentUser;
