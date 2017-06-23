@@ -15,11 +15,11 @@ export const addItem = (modelName, itemData) => new Promise((resolve) => {
   });
 });
 
-export const addItemWithParentId = (modelName, parentId, itemData) => new Promise((resolve) => {
+export const addItemWithId = (modelName, id, itemData) => new Promise((resolve) => {
   // To create a new object with pre-defined key
   const firebase = getFirebaseApp();
   const itemRef = firebase.database().ref().child(modelName);
-  const newItemRef = itemRef.child(parentId).push();
+  const newItemRef = itemRef.child(id).push();
   const itemID = newItemRef.key;
   newItemRef.set(itemData).then(() => {
     const newItem = {

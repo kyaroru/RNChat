@@ -1,9 +1,13 @@
-import { addItem, updateItem, removeItem, getAllItems, getItemBy, getItemsBy } from './base';
+import { addItem, addChildItem, updateItem, removeItem, getAllItems, getItemBy, getItemsBy } from './base';
 
 const MODEL_NAME = 'customer_service';
 
 export const add = data => new Promise((resolve) => {
   resolve(addItem(MODEL_NAME, data));
+});
+
+export const addChild = (fieldName, data) => new Promise((resolve) => {
+  resolve(addChildItem(MODEL_NAME, data));
 });
 
 export const update = (id, data) => new Promise((resolve) => {

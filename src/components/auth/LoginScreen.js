@@ -19,6 +19,10 @@ import * as Colors from '../../themes/colors';
 import { getNavigationOptions } from '../../utils/navigation';
 
 class LoginScreen extends Component {
+  static validateEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+  }
 
   static renderInstruction() {
     return (
@@ -52,16 +56,25 @@ class LoginScreen extends Component {
 
   upsertUser(user) {
     const { updateCurrentUser, navigation } = this.props;
+    const { name, email } = this.state;
     this.setState({ isLoading: true });
     User.getBy('email', user.email).then((userFromDb) => {
       if (userFromDb !== null) {
-        // alert('Success', 'You have been logged in as User!', 'OK');
         this.setState({ email: null, name: null, password: null, isLoading: false });
         this.clearInput();
         updateCurrentUser(userFromDb);
       } else {
+        if (name === null || name === '') {
+          alert('Welcome', 'Since you are new, please enter your name and try again :p', 'OK');
+          this.setState({ isLoading: false });
+          return;
+        }
+        if (!LoginScreen.validateEmail(email)) {
+          alert('Sorry', 'Please enter a valid email', 'OK');
+          this.setState({ isLoading: false });
+          return;
+        }
         User.add(user).then((newUser) => {
-          // alert('Success', 'You have been registered as User!', 'OK');
           this.setState({ email: null, name: null, password: null, isLoading: false });
           this.clearInput();
           updateCurrentUser(newUser);
@@ -73,12 +86,12 @@ class LoginScreen extends Component {
 
   upsertCustomerService(customerService) {
     const { updateCurrentUser } = this.props;
+    const { name, email } = this.state;
     this.setState({ isLoading: true });
 
     CustomerService.getBy('email', customerService.email).then((userFromDb) => {
       if (userFromDb !== null) {
         if (userFromDb.password === customerService.password) {
-          // alert('Success', 'You have been logged in as Customer Service Officer!', 'OK');
           this.setState({ email: null, name: null, isLoading: false });
           this.clearInput();
           updateCurrentUser(userFromDb);
@@ -87,6 +100,15 @@ class LoginScreen extends Component {
           this.setState({ isLoading: false });
         }
       } else {
+        if (name === null || name === '') {
+          alert('Welcome', 'Since you are new, please enter your name and try again :p', 'OK');
+          return;
+        }
+        if (!LoginScreen.validateEmail(email)) {
+          alert('Sorry', 'Please enter a valid email', 'OK');
+          this.setState({ isLoading: false });
+          return;
+        }
         CustomerService.add(customerService).then((newCS) => {
           // alert('Success', 'You have been registered as Customer Service Officer!', 'OK');
           this.setState({ email: null, name: null, isLoading: false });
@@ -98,17 +120,23 @@ class LoginScreen extends Component {
   }
 
   login() {
-    if (this.state.selectedTab === 'user') {
+    const { name, email, password, selectedTab } = this.state;
+    if (email === null || email === '') {
+      alert('Error', 'Please enter your email!', 'OK');
+      return;
+    }
+
+    if (selectedTab === 'user') {
       const user = {
-        name: this.state.name,
-        email: this.state.email.toLowerCase(),
+        name,
+        email: email.toLowerCase(),
       };
       this.upsertUser(user);
     } else {
       const customerService = {
-        name: this.state.name,
-        email: this.state.email.toLowerCase(),
-        password: this.state.password,
+        name,
+        email: email.toLowerCase(),
+        password,
         active: 'false',
       };
       this.upsertCustomerService(customerService);
@@ -249,18 +277,13 @@ const styles = StyleSheet.create({
 
 LoginScreen.propTypes = {
   updateCurrentUser: PropTypes.func.isRequired,
-  currentUser: PropTypes.object.isRequired,
   navigation: PropTypes.object.isRequired,
 };
-
-const mapStateToProps = store => ({
-  currentUser: store[ducks.NAME].currentUser,
-});
 
 const mapDispatchToProps = {
   updateCurrentUser: ducks.updateCurrentUser,
 };
 
-LoginScreen.navigationOptions = ({ navigation }) => getNavigationOptions('Login', Colors.primary, 'white');
+LoginScreen.navigationOptions = () => getNavigationOptions('Login', Colors.primary, 'white');
 
-export default connect(mapStateToProps, mapDispatchToProps)(LoginScreen);
+export default connect(null, mapDispatchToProps)(LoginScreen);

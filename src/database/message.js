@@ -1,9 +1,9 @@
-import { addItemWithParentId, updateItem, removeItem, getAllItems, getItemBy, getLastByParentId, getItemsByParentId, onChildAdded, offChildAdded } from './base';
+import { addItemWithId, updateItem, removeItem, getAllItems, getItemBy, getLastByParentId, getItemsByParentId, onChildAdded, offChildAdded } from './base';
 
 const MODEL_NAME = 'message';
 
-export const add = (parentId, data) => new Promise((resolve) => {
-  resolve(addItemWithParentId(MODEL_NAME, parentId, data));
+export const add = (id, data) => new Promise((resolve) => {
+  resolve(addItemWithId(MODEL_NAME, id, data));
 });
 
 export const update = (id, data) => new Promise((resolve) => {

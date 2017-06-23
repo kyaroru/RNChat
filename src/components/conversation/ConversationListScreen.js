@@ -9,8 +9,10 @@ import {
   ActivityIndicator,
   ListView,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import isEmpty from 'lodash/isEmpty';
 import { Conversation, Message } from '../../database';
+import * as Colors from '../../themes/colors';
 import * as authDucks from '../auth/ducks';
 
 class ConversationListScreen extends Component {
@@ -92,11 +94,6 @@ class ConversationListScreen extends Component {
     }
   }
 
-  genRows() {
-    const { conversations } = this.state;
-    return conversations;
-  }
-
   openConversation(conversation) {
     const { navigation } = this.props;
     navigation.navigate('ConversationScreen', { conversation });
@@ -124,15 +121,26 @@ class ConversationListScreen extends Component {
   }
 
   renderConversations() {
+    const { conversations } = this.state;
+    if (conversations.length > 0) {
+      return (
+        <ListView
+          ref={(component) => {
+            this.listView = component;
+          }}
+          dataSource={ConversationListScreen.getDataSource().cloneWithRows(conversations)}
+          renderRow={this.renderItem}
+          enableEmptySections
+        />
+      );
+    }
     return (
-      <ListView
-        ref={(component) => {
-          this.listView = component;
-        }}
-        dataSource={ConversationListScreen.getDataSource().cloneWithRows(this.genRows())}
-        renderRow={this.renderItem}
-        enableEmptySections
-      />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ padding: 10 }}>
+          <Icon name="comments-o" size={50} color={Colors.primary} />
+        </View>
+        <Text style={{ color: Colors.primary }}>You have not chat with anyone yet</Text>
+      </View>
     );
   }
 
