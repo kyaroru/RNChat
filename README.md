@@ -2,7 +2,7 @@
 RNChat is a simple in app chat (with customer service officer) built in React Native + Firebase.
 
 ### Reference
-This project uses [Firebase](https://firebase.google.com/)
+This project uses [Firebase Realtime Database](https://firebase.google.com/products/database/)
 
 ### Installation
 
