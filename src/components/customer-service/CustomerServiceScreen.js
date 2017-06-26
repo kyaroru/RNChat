@@ -46,16 +46,13 @@ class CustomerServiceScreen extends Component {
     <View style={[styles.separator, highlighted && { marginLeft: 0 }]} />
   )
 
-  deleteCustomerService(id) {
-    CustomerService.remove(id).then(() => {
-      console.log('Customer Service is removed!');
-      this.getAllCustomerServices();
-    });
+  viewCustomerService(cs) {
+    console.log(cs.id);
   }
 
   renderItem({ item }) {
     return (
-      <TouchableOpacity style={styles.itemContainer} onPress={() => this.deleteCustomerService(item.id)}>
+      <TouchableOpacity style={styles.itemContainer} onPress={() => this.viewCustomerService(item)}>
         <View style={styles.item}>
           <View style={styles.avatar}>
             <Text>{item.name[0]}</Text>

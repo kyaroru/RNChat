@@ -46,16 +46,13 @@ class UserScreen extends Component {
     <View style={[styles.separator, highlighted && { marginLeft: 0 }]} />
   )
 
-  deleteUser(id) {
-    User.remove(id).then(() => {
-      console.log('User is removed!');
-      this.getAllUsers();
-    });
+  viewUser(user) {
+    console.log(user.id);
   }
 
   renderItem({ item }) {
     return (
-      <TouchableOpacity style={styles.itemContainer} onPress={() => this.deleteUser(item.id)}>
+      <TouchableOpacity style={styles.itemContainer} onPress={() => this.viewUser(item)}>
         <View style={styles.item}>
           <View style={styles.avatar}>
             <Text>{item.name[0]}</Text>
