@@ -51,3 +51,5 @@ buck-out/
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots
+
+npm-debug\.log\.3f3829a34c2b8a4278afceb7bc87896e
