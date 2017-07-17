@@ -12,7 +12,8 @@ import {
 import { connect } from 'react-redux';
 import KeyboardSpacer from 'react-native-keyboard-spacer';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { User, CustomerService } from '../../database';
+import isEmpty from 'lodash/isEmpty';
+import { User, CustomerService, Device } from '../../database';
 import { alert } from '../../utils/alert';
 import * as ducks from './ducks';
 import * as Colors from '../../themes/colors';
@@ -54,15 +55,32 @@ class LoginScreen extends Component {
     }
   }
 
+  handleLoginSuccess(user) {
+    const { updateCurrentUser, currentDevice } = this.props;
+    updateCurrentUser(user);
+    if (!isEmpty(currentDevice)) {
+      const device = {
+        userId: user.id,
+        deviceId: currentDevice.userId,
+      };
+      Device.add(user.id, device).then((newDevice) => {
+        console.log(`Device added to user ${user.name}`);
+        console.log(newDevice);
+      });
+    } else {
+      console.log('[RNChat] OneSignal Device ID Not Found');
+    }
+  }
+
   upsertUser(user) {
-    const { updateCurrentUser, navigation } = this.props;
+    const { navigation } = this.props;
     const { name, email } = this.state;
     this.setState({ isLoading: true });
     User.getBy('email', user.email).then((userFromDb) => {
       if (userFromDb !== null) {
         this.setState({ email: null, name: null, password: null, isLoading: false });
         this.clearInput();
-        updateCurrentUser(userFromDb);
+        this.handleLoginSuccess(userFromDb);
       } else {
         if (name === null || name === '') {
           alert('Welcome', 'Since you are new, please enter your name and try again :p', 'OK');
@@ -77,7 +95,7 @@ class LoginScreen extends Component {
         User.add(user).then((newUser) => {
           this.setState({ email: null, name: null, password: null, isLoading: false });
           this.clearInput();
-          updateCurrentUser(newUser);
+          this.handleLoginSuccess(newUser);
         });
       }
       navigation.navigate('HomeScreen');
@@ -85,16 +103,15 @@ class LoginScreen extends Component {
   }
 
   upsertCustomerService(customerService) {
-    const { updateCurrentUser } = this.props;
     const { name, email } = this.state;
     this.setState({ isLoading: true });
 
-    CustomerService.getBy('email', customerService.email).then((userFromDb) => {
-      if (userFromDb !== null) {
-        if (userFromDb.password === customerService.password) {
+    CustomerService.getBy('email', customerService.email).then((csFromDb) => {
+      if (csFromDb !== null) {
+        if (csFromDb.password === customerService.password) {
           this.setState({ email: null, name: null, isLoading: false });
           this.clearInput();
-          updateCurrentUser(userFromDb);
+          this.handleLoginSuccess(csFromDb);
         } else {
           alert('Error', 'Your password is incorrect!', 'OK');
           this.setState({ isLoading: false });
@@ -113,7 +130,7 @@ class LoginScreen extends Component {
           // alert('Success', 'You have been registered as Customer Service Officer!', 'OK');
           this.setState({ email: null, name: null, isLoading: false });
           this.clearInput();
-          updateCurrentUser(newCS);
+          this.handleLoginSuccess(newCS);
         });
       }
     });
@@ -278,7 +295,12 @@ const styles = StyleSheet.create({
 LoginScreen.propTypes = {
   updateCurrentUser: PropTypes.func.isRequired,
   navigation: PropTypes.object.isRequired,
+  currentDevice: PropTypes.object.isRequired,
 };
+
+const mapStateToProps = store => ({
+  currentDevice: store[ducks.NAME].currentDevice,
+});
 
 const mapDispatchToProps = {
   updateCurrentUser: ducks.updateCurrentUser,
@@ -286,4 +308,4 @@ const mapDispatchToProps = {
 
 LoginScreen.navigationOptions = () => getNavigationOptions('Login', Colors.primary, 'white');
 
-export default connect(null, mapDispatchToProps)(LoginScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(LoginScreen);

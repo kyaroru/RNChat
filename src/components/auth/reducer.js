@@ -10,6 +10,16 @@ const currentUser = (state = {}, action) => {
   }
 };
 
+const currentDevice = (state = {}, action) => {
+  switch (action.type) {
+    case ducks.UPDATE_CURRENT_DEVICE:
+      return action.device;
+    default:
+      return state;
+  }
+};
+
 export default combineReducers({
   currentUser,
+  currentDevice,
 });

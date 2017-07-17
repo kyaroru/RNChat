@@ -139,6 +139,8 @@ android {
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
+        manifestPlaceholders = [onesignal_app_id: "349dea3a-4f5b-4637-8a94-f710d99f47aa",
+                                onesignal_google_project_number: "667403901296"]
         signingConfig signingConfigs.config
     }
     splits {
@@ -171,6 +173,7 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-onesignal')
     compile project(':react-native-vector-icons')
     compile fileTree(dir: "libs", include: ["*.jar"])
     compile "com.android.support:appcompat-v7:23.0.1"

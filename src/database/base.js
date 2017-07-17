@@ -146,6 +146,25 @@ export const getItemsByParentId = (modelName, parentId) => new Promise((resolve)
   });
 });
 
+export const getNestedItemBy = (modelName, parentId, fieldName, value) => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
+  const itemRef = firebase.database().ref(modelName).child(parentId);
+  const childRef = itemRef.orderByChild(fieldName).equalTo(value);
+  childRef.once('value', (snapshot) => {
+    const itemData = snapshot.val();
+    if (itemData !== null) {
+      const itemID = Object.keys(itemData)[0];
+      const item = {
+        id: itemID,
+        ...itemData[itemID],
+      };
+      resolve(item);
+    } else {
+      resolve(null);
+    }
+  });
+});
+
 export const getLastByParentId = (modelName, parentId) => new Promise((resolve) => {
   const firebase = getFirebaseApp();
   const itemsRef = firebase.database().ref(modelName).child(parentId).limitToLast(1);
@@ -164,6 +183,14 @@ export const getLastByParentId = (modelName, parentId) => new Promise((resolve) 
     } else {
       resolve({});
     }
+  });
+});
+
+export const removeItemByParentAndChildId = (modelName, parentId, childId) => new Promise((resolve) => {
+  const firebase = getFirebaseApp();
+  const itemRef = firebase.database().ref(`/${modelName}/${parentId}/${childId}`);
+  itemRef.remove().then(() => {
+    resolve();
   });
 });
 

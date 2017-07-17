@@ -11,7 +11,8 @@ import { connect } from 'react-redux';
 import _ from 'lodash';
 import isEmpty from 'lodash/isEmpty';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { User, CustomerService, Conversation } from '../../database';
+import OneSignal from 'react-native-onesignal';
+import { Device, User, CustomerService, Conversation } from '../../database';
 import * as authDucks from '../auth/ducks';
 import * as conversationDucks from '../conversation/ducks';
 import * as Colors from '../../themes/colors';
@@ -25,8 +26,13 @@ class HomeScreen extends Component {
   }
 
   logout() {
-    const { updateCurrentUser } = this.props;
-    updateCurrentUser({});
+    const { updateCurrentUser, currentUser, currentDevice } = this.props;
+    Device.getOneBy(currentUser.id, 'deviceId', currentDevice.userId).then((deviceFromDb) => {
+      if (deviceFromDb !== null) {
+        Device.removeByParentAndChild(currentUser.id, deviceFromDb.id);
+      }
+      updateCurrentUser({});
+    });
   }
 
   isUser() {
@@ -38,11 +44,29 @@ class HomeScreen extends Component {
     const { navigation } = this.props;
     Conversation.getBy('userId_csId', `${userId}_${csId}`).then((conversationFromDB) => {
       if (conversationFromDB !== null) {
+        this.sendNotificationToTarget(conversationFromDB);
         navigation.navigate('ConversationScreen', { conversation: conversationFromDB });
       } else {
         Conversation.add(conversation).then((conversationFromDB) => {
+          this.sendNotificationToTarget(conversationFromDB);
           navigation.navigate('ConversationScreen', { conversation: conversationFromDB });
         });
+      }
+    });
+  }
+
+  sendNotificationToTarget(conversation) {
+    const { targetUser, currentUser } = this.props;
+    Device.getMoreBy(targetUser.id).then((devices) => {
+      const deviceList = devices.map(device => device.deviceId);
+      if (deviceList.length > 0) {
+        const data = conversation;
+        const contents = {
+          en: `You have new message from ${currentUser.name}`,
+        };
+        OneSignal.postNotification(contents, data, deviceList[0]);
+      } else {
+        console.log('[OneSignal] The user have not registered any device for push notification.');
       }
     });
   }
@@ -163,12 +187,16 @@ const styles = StyleSheet.create({
 HomeScreen.propTypes = {
   updateCurrentUser: PropTypes.func.isRequired,
   updateTargetUser: PropTypes.func.isRequired,
+  currentDevice: PropTypes.object.isRequired,
   currentUser: PropTypes.object.isRequired,
+  targetUser: PropTypes.object.isRequired,
   navigation: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = store => ({
   currentUser: store[authDucks.NAME].currentUser,
+  currentDevice: store[authDucks.NAME].currentDevice,
+  targetUser: store[conversationDucks.NAME].targetUser,
 });
 
 const mapDispatchToProps = {
