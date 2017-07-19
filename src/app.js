@@ -37,7 +37,9 @@ class App extends Component {
 
   componentDidMount() {
     if (Platform.OS === 'android') {
-      // 0 - Will not display any alert, so we can use customize alert
+      // 0 - (None) Will not display a notification, instead only onNotificationReceived will fire where you can display your own in app messages.
+      // 1 - InAppAlert - (Default) Will display an Android AlertDialog with the message contains.
+      // 2 - Notification - Notification will display in the Notification Shade. Same as when the app is not in focus.
       OneSignal.inFocusDisplaying(0);
       BackHandler.addEventListener('backPress', this.handleBackButton);
     }
