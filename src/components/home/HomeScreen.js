@@ -31,8 +31,8 @@ class HomeScreen extends Component {
       if (deviceFromDb !== null) {
         Device.removeByParentAndChild(currentUser.id, deviceFromDb.id);
       }
-      updateCurrentUser({});
     });
+    updateCurrentUser({});
   }
 
   isUser() {

@@ -57,36 +57,36 @@ class App extends Component {
       data: receiveResult.payload.additionalData.p2p_notification,
       isActive: receiveResult.isAppInFocus,
     };
-    this.handlePushNotificationWhenReceive(notification);
+    if (notification.isActive) {
+      this.handlePushNotification(notification);
+    }
   }
 
   onNotificationOpened(openResult) {
     const notification = {
       title: openResult.notification.payload.title,
       message: openResult.notification.payload.body,
-      data: openResult.notification.payload.additionalData,
+      data: openResult.notification.payload.additionalData.p2p_notification,
       isActive: openResult.notification.isAppInFocus,
     };
-    // this.handlePushNotification(notification);
+    this.handlePushNotification(notification);
   }
 
-  handlePushNotificationWhenReceive(notification) {
-    if (notification.isActive) {
-      const conversation = notification.data;
-      const callback = () => {
-        User.get(conversation.userId).then((userFromDB) => {
-          this.props.updateTargetUser(userFromDB);
-          const navigateAction = NavigationActions.navigate({
-            routeName: 'ConversationScreen',
-            params: {
-              conversation: notification.data,
-            },
-          });
-          this.navigation.dispatch(navigateAction);
+  handlePushNotification(notification) {
+    const conversation = notification.data;
+    const callback = () => {
+      User.get(conversation.userId).then((userFromDB) => {
+        this.props.updateTargetUser(userFromDB);
+        const navigateAction = NavigationActions.navigate({
+          routeName: 'ConversationScreen',
+          params: {
+            conversation: notification.data,
+          },
         });
-      };
-      confirmation('Notification', notification.message, 'Start Chat', 'Cancel', callback);
-    }
+        this.navigation.dispatch(navigateAction);
+      });
+    };
+    confirmation('Notification', notification.message, 'Start Chat', 'Cancel', callback);
   }
 
   handleBackButton() {

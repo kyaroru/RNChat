@@ -63,9 +63,13 @@ class LoginScreen extends Component {
         userId: user.id,
         deviceId: currentDevice.userId,
       };
-      Device.add(user.id, device).then((newDevice) => {
-        console.log(`Device added to user ${user.name}`);
-        console.log(newDevice);
+      Device.getOneBy(user.id, 'deviceId', currentDevice.userId).then((deviceFromDb) => {
+        if (deviceFromDb === null) {
+          Device.add(user.id, device).then((newDevice) => {
+            console.log(`Device added to user ${user.name}`);
+            console.log(newDevice);
+          });
+        }
       });
     } else {
       console.log('[RNChat] OneSignal Device ID Not Found');
