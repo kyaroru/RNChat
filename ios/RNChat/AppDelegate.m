@@ -11,13 +11,21 @@
 
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
+#import <RCTOneSignal/RCTOneSignal.h>
 
 @implementation AppDelegate
+
+@synthesize oneSignal = _oneSignal;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   NSURL *jsCodeLocation;
 
+  NSString *oneSignalAppID = @"349dea3a-4f5b-4637-8a94-f710d99f47aa";
+  NSLog(@"[CarpitIOS] OneSignal App ID: %@", oneSignalAppID);
+  self.oneSignal = [[RCTOneSignal alloc] initWithLaunchOptions:launchOptions appId:oneSignalAppID settings:@{kOSSettingsKeyInFocusDisplayOption : @(OSNotificationDisplayTypeNone), kOSSettingsKeyAutoPrompt : @YES}];
+  
+  
   jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index.ios" fallbackResource:nil];
 
   RCTRootView *rootView = [[RCTRootView alloc] initWithBundleURL:jsCodeLocation
