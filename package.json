@@ -18,7 +18,7 @@
     "react-native-keyboard-spacer": "^0.3.1",
     "react-native-onesignal": "^3.0.4",
     "react-native-vector-icons": "^4.2.0",
-    "react-navigation": "^1.0.0-beta.11",
+    "react-navigation": "1.0.0-beta.27",
     "react-redux": "^5.0.5",
     "redux": "^3.6.0",
     "redux-logger": "^3.0.6",

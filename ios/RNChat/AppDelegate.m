@@ -22,7 +22,7 @@
   NSURL *jsCodeLocation;
 
   NSString *oneSignalAppID = @"349dea3a-4f5b-4637-8a94-f710d99f47aa";
-  NSLog(@"[CarpitIOS] OneSignal App ID: %@", oneSignalAppID);
+  NSLog(@"[RNChatIOS] OneSignal App ID: %@", oneSignalAppID);
   self.oneSignal = [[RCTOneSignal alloc] initWithLaunchOptions:launchOptions appId:oneSignalAppID settings:@{kOSSettingsKeyInFocusDisplayOption : @(OSNotificationDisplayTypeNone), kOSSettingsKeyAutoPrompt : @YES}];
   
   
